@@ -66,13 +66,13 @@ if __name__ == '__main__':
     colmap_exe = "colmap.bat" if platform.system() == "Windows" else "colmap"
     start_time = time.time()
 
-    ## First create raw_chunks, each chunk has its own colmap.
-    print(f"chunking colmap from {colmap_dir} to {args.chunks_dir}/raw_chunks")
+    ## First create chunks, each chunk has its own colmap.
+    print(f"chunking colmap from {colmap_dir} to {args.chunks_dir}/chunks")
     make_chunk_args = [
             "python", f"preprocess/make_chunk.py",
             "--base_dir", os.path.join(colmap_dir, "sparse", "0"),
             "--images_dir", f"{images_dir}",
-            "--output_path", f"{chunks_dir}/raw_chunks",
+            "--output_path", f"{chunks_dir}/chunks",
         ]
     try:
         subprocess.run(make_chunk_args, check=True)
@@ -83,9 +83,9 @@ if __name__ == '__main__':
     ## Then we refine chunks with 2 rounds of bundle adjustment/triangulation
     print("Starting per chunk triangulation and bundle adjustment (if required)")
     n_processed = 0
-    chunk_names = os.listdir(os.path.join(chunks_dir, "raw_chunks"))
+    chunk_names = os.listdir(os.path.join(chunks_dir, "chunks"))
     for chunk_name in chunk_names:
-        in_dir = os.path.join(chunks_dir, "raw_chunks", chunk_name)
+        in_dir = os.path.join(chunks_dir, "chunks", chunk_name)
         out_dir = os.path.join(chunks_dir, "chunks", chunk_name)
 
         if args.use_slurm:
