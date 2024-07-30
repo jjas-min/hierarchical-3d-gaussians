@@ -76,7 +76,7 @@ if __name__ == '__main__':
         colmap_exe, "feature_extractor",
         "--database_path", f"{bundle_adj_chunk}/database.db",
         "--image_path", f"{bundle_adj_chunk}/images",
-        "--ImageReader.existing_camera_id", "1",
+        "--ImageReader.existing_camera_id", "0",
         ]
     
     try:
