@@ -74,10 +74,15 @@ class Scene:
             self.test_cameras[resolution_scale] = CameraDataset(scene_info.test_cameras, args, resolution_scale, True)
 
         if self.loaded_iter:
-            self.gaussians.load_ply(os.path.join(self.model_path,
+            if os.path.exists(os.path.join(self.model_path, "point_cloud", "iteration_" + str(self.loaded_iter), "point_cloud.ply")):
+                self.gaussians.load_ply(os.path.join(self.model_path,
                                                            "point_cloud",
                                                            "iteration_" + str(self.loaded_iter),
                                                            "point_cloud.ply"))
+            else:
+                self.gaussians.load_pt(os.path.join(self.model_path,
+                                                          "point_cloud",
+                                                          "iteration_" + str(self.loaded_iter)))
         elif args.pretrained:
             self.gaussians.create_from_pt(args.pretrained, self.cameras_extent)
         elif create_from_hier:
@@ -101,8 +106,7 @@ class Scene:
             with open(os.path.join(point_cloud_path, "pc_info.txt"), "w") as f:
                 f.write(str(self.gaussians.skybox_points))
             if self.gaussians._xyz.size(0) > 8_000_000:
-                # self.gaussians.save_pt(point_cloud_path)
-                self.gaussians.save_ply(os.path.join(point_cloud_path, "point_cloud.ply"))
+                self.gaussians.save_pt(point_cloud_path)
             else:
                 self.gaussians.save_ply(os.path.join(point_cloud_path, "point_cloud.ply"))
 

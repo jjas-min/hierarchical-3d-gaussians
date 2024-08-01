@@ -206,7 +206,10 @@ class GaussianModel:
 
         self.scaffold_points = None
         if scaffold_file != "": 
-            scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_ply_file(scaffold_file + "/point_cloud.ply", 1)
+            if os.path.exists(scaffold_file + "/point_cloud.ply"):
+                scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_ply_file(scaffold_file + "/point_cloud.ply", 1)
+            else:
+                scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_pt_file(scaffold_file)
             scaffold_xyz = torch.from_numpy(scaffold_xyz).float()
             features_dc_scaffold = torch.from_numpy(features_dc_scaffold).permute(0, 2, 1).float()
             features_extra_scaffold = torch.from_numpy(features_extra_scaffold).permute(0, 2, 1).float()
@@ -322,6 +325,15 @@ class GaussianModel:
 
         return xyz, features_dc, features_extra, opacities, scales, rots
 
+    def load_pt_file(self, path):
+        xyz = torch.load(os.path.join(path, "done_xyz.pt")).detach().cpu().numpy()
+        features_dc = torch.load(os.path.join(path, "done_dc.pt")).detach().cpu().numpy()
+        features_rest = torch.load(os.path.join(path, "done_rest.pt")).detach().cpu().numpy()
+        opacities = torch.load(os.path.join(path, "done_opacity.pt")).detach().cpu().numpy()
+        scales = torch.load(os.path.join(path, "done_scaling.pt")).detach().cpu().numpy()
+        rots = torch.load(os.path.join(path, "done_rotation.pt")).detach().cpu().numpy()
+
+        return xyz, features_dc, features_rest, opacities, scales, rots
 
     def create_from_hier(self, path, spatial_lr_scale : float, scaffold_file : str):
         self.spatial_lr_scale = spatial_lr_scale
@@ -355,7 +367,10 @@ class GaussianModel:
         #retrieve skybox
         self.skybox_points = 0         
         if scaffold_file != "":
-            scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_ply_file(scaffold_file + "/point_cloud.ply", 1)
+            if os.path.excists(os.path.join(scaffold_file, "point_cloud.ply")):
+                scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_ply_file(scaffold_file + "/point_cloud.ply", 1)
+            else:
+                scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_pt_file(scaffold_file)
             scaffold_xyz = torch.from_numpy(scaffold_xyz).float()
             features_dc_scaffold = torch.from_numpy(features_dc_scaffold).permute(0, 2, 1).float()
             features_extra_scaffold = torch.from_numpy(features_extra_scaffold).permute(0, 2, 1).float()
@@ -524,6 +539,17 @@ class GaussianModel:
         self._rotation = nn.Parameter(torch.tensor(rots, dtype=torch.float, device="cuda").requires_grad_(True))
 
         self.active_sh_degree = self.max_sh_degree
+    def load_pt(self, path):
+        xyz, features_dc, features_rest, opacities, scales, rots = self.load_pt_file(path)
+
+        self._xyz = nn.Parameter(torch.tensor(xyz, dtype=torch.float, device="cuda").requires_grad_(True))
+        self._features_dc = nn.Parameter(torch.tensor(features_dc, dtype=torch.float, device="cuda").requires_grad_(True))
+        self._features_rest = nn.Parameter(torch.tensor(features_rest, dtype=torch.float, device="cuda").requires_grad_(True))
+        self._opacity = nn.Parameter(torch.tensor(opacities, dtype=torch.float, device="cuda").requires_grad_(True))
+        self._scaling = nn.Parameter(torch.tensor(scales, dtype=torch.float, device="cuda").requires_grad_(True))
+        self._rotation = nn.Parameter(torch.tensor(rots, dtype=torch.float, device="cuda").requires_grad_(True))
+        self.active_sh_degree = self.max_sh_degree
+
 
     def replace_tensor_to_optimizer(self, tensor, name):
         optimizable_tensors = {}
