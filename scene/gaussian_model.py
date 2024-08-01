@@ -367,7 +367,7 @@ class GaussianModel:
         #retrieve skybox
         self.skybox_points = 0         
         if scaffold_file != "":
-            if os.path.excists(os.path.join(scaffold_file, "point_cloud.ply")):
+            if os.path.exists(os.path.join(scaffold_file, "point_cloud.ply")):
                 scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_ply_file(scaffold_file + "/point_cloud.ply", 1)
             else:
                 scaffold_xyz, features_dc_scaffold, features_extra_scaffold, opacities_scaffold, scales_scaffold, rots_scaffold = self.load_pt_file(scaffold_file)
