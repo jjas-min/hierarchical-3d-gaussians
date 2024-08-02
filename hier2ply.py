@@ -17,6 +17,7 @@ class GaussianModel:
         self._opacity = None
         self._scaling = None
         self._rotation = None
+        self.get_xyz = None
     
     def load_heir(self, path):
         xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
