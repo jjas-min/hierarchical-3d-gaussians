@@ -19,7 +19,7 @@ class GaussianModel:
         self._rotation = None
     
     def load_heir(self, path):
-        xyz, shs_all, alpha, scales, rots = load_hierarchy(path)
+        xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
         self._xyz = nn.Parameter(xyz.cuda().requires_grad_(True))
         self._features_dc = nn.Parameter(shs_all.cuda()[:,:1,:].requires_grad_(True))
         self._features_rest = nn.Parameter(shs_all.cuda()[:,1:16,:].requires_grad_(True))
