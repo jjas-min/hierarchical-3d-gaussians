@@ -26,10 +26,6 @@ class GaussianModel:
         self._opacity = nn.Parameter(alpha.cuda().requires_grad_(True))
         self._scaling = nn.Parameter(scales.cuda().requires_grad_(True))
         self._rotation = nn.Parameter(rots.cuda().requires_grad_(True))
-        self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
-
-    def get_xyz(self):
-        return self._xyz
     
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
