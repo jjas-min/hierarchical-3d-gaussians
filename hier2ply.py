@@ -17,7 +17,6 @@ class GaussianModel:
         self._opacity = None
         self._scaling = None
         self._rotation = None
-        self.get_xyz = None
     
     def load_heir(self, path):
         xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
@@ -29,7 +28,9 @@ class GaussianModel:
         self._rotation = nn.Parameter(rots.cuda().requires_grad_(True))
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
 
-
+    def get_xyz(self):
+        return self._xyz
+    
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
         for i in range(self._features_dc.shape[1] * self._features_dc.shape[2]):
