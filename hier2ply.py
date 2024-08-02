@@ -45,13 +45,13 @@ class GaussianModel:
     def save_ply(self, path):
         mkdir_p(os.path.dirname(path))
 
-        xyz = self._xyz.numpy()
+        xyz = self._xyz.detach().cpu().numpy()
         normals = np.zeros_like(xyz)
-        f_dc = self._features_dc.transpose(1, 2).flatten(start_dim=1).contiguous().numpy()
-        f_rest = self._features_rest.transpose(1, 2).flatten(start_dim=1).contiguous().numpy()
-        opacities = self._opacity.numpy()
-        scale = self._scaling.numpy()
-        rotation = self._rotation.numpy()
+        f_dc = self._features_dc.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+        f_rest = self._features_rest.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+        opacities = self._opacity.detach().cpu().numpy()
+        scale = self._scaling.detach().cpu().numpy()
+        rotation = self._rotation.detach().cpu().numpy()
 
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
 
