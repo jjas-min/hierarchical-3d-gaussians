@@ -3,7 +3,7 @@ import torch
 from torch import nn
 import numpy as np
 from plyfile import PlyData, PlyElement
-from gaussian_hierarchy._C import load_hierarchy, write_hierarchy
+from gaussian_hierarchy._C import load_hierarchy
 
 def mkdir_p(path):
     if not os.path.exists(path):
@@ -19,7 +19,7 @@ class GaussianModel:
         self._rotation = None
     
     def load_heir(self, path):
-        xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
+        xyz, shs_all, alpha, scales, rots = load_hierarchy(path)
         self._xyz = nn.Parameter(xyz.cuda().requires_grad_(True))
         self._features_dc = nn.Parameter(shs_all.cuda()[:,:1,:].requires_grad_(True))
         self._features_rest = nn.Parameter(shs_all.cuda()[:,1:16,:].requires_grad_(True))
@@ -45,7 +45,7 @@ class GaussianModel:
     def save_ply(self, path):
         mkdir_p(os.path.dirname(path))
 
-        xyz = self._xyz.detach().cuda().numpy()
+        xyz = self._xyz.detach().cpu().numpy()
         normals = np.zeros_like(xyz)
         f_dc = self._features_dc.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
         f_rest = self._features_rest.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
@@ -68,9 +68,8 @@ def convert_hier_to_ply(base_path):
     heir_path = os.path.join(base_path, "output")
     if os.path.exists(os.path.join(heir_path, "merge.hier")):
         model.load_heir(os.path.join(heir_path, "merge.hier"))
-
-    ply_path = os.path.join(base_path, "output", "output.ply")
-    model.save_ply(ply_path)
+        ply_path = os.path.join(base_path, "output", "output.ply")
+        model.save_ply(ply_path)
 
 
 # 예시 사용법
