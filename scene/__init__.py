@@ -105,6 +105,7 @@ class Scene:
         else:
             with open(os.path.join(point_cloud_path, "pc_info.txt"), "w") as f:
                 f.write(str(self.gaussians.skybox_points))
+            print(self.gaussians._xyz.size(0))
             if self.gaussians._xyz.size(0) > 8_000_000:
                 self.gaussians.save_pt(point_cloud_path)
             else:
