@@ -66,8 +66,8 @@ def convert_hier_to_ply(base_path):
     model = GaussianModel()
     # Output 폴더 내의 hier 파일을 로드하여 PLY 파일로 변환
     heir_path = os.path.join(base_path, "output")
-    if os.path.exists(os.path.join(heir_path, "merge.hier")):
-        model.load_heir(os.path.join(heir_path, "merge.hier"))
+    if os.path.exists(os.path.join(heir_path, "merged.hier")):
+        model.load_heir(os.path.join(heir_path, "merged.hier"))
         ply_path = os.path.join(base_path, "output", "output.ply")
         model.save_ply(ply_path)
 
