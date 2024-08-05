@@ -59,7 +59,7 @@ class GaussianModel(nn.Module):
             nodes_for_render_indices = torch.zeros(self._xyz.size(0)).int().cuda()
             interpolation_weights = torch.zeros(self._xyz.size(0)).float().cuda()
             num_siblings = torch.zeros(self._xyz.size(0)).int().cuda()
-
+            print("1")
             # Use expand_to_size and get_interpolation_weights as in the render_set function
             to_render = expand_to_size(
                 self.nodes,
@@ -71,7 +71,7 @@ class GaussianModel(nn.Module):
                 parent_indices,
                 nodes_for_render_indices
             )
-
+            print("2")
             indices = render_indices[:to_render].int().contiguous()
             node_indices = nodes_for_render_indices[:to_render].contiguous()
 
