@@ -3,7 +3,7 @@ import torch
 from torch import nn
 import numpy as np
 from plyfile import PlyData, PlyElement
-from hierarchy_loader import load_hierarchy  # Assuming the C++ code is wrapped for Python use
+from gaussian_hierarchy._C import load_hierarchy
 
 def mkdir_p(path):
     if not os.path.exists(path):
