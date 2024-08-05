@@ -1,4 +1,6 @@
 import os
+import torch
+from torch import nn
 import numpy as np
 from plyfile import PlyData, PlyElement
 from hierarchy_loader import load_hierarchy  # Assuming the C++ code is wrapped for Python use
@@ -18,19 +20,19 @@ class GaussianModel:
     
     def load_hier(self, path):
         pos, shs, alphas, scales, rot, nodes, boxes = load_hierarchy(path)
-        self._xyz = torch.tensor(pos).float()
-        shs_tensor = torch.tensor(shs).float()
-        self._features_dc = shs_tensor[:,:,:1].reshape(-1, shs_tensor.shape[2])
-        self._features_rest = shs_tensor[:,:,1:16].reshape(-1, shs_tensor.shape[2])
-        self._opacity = torch.tensor(alphas).float().reshape(-1, 1)
-        self._scaling = torch.tensor(scales).float()
-        self._rotation = torch.tensor(rot).float()
+        self._xyz = nn.Parameter(torch.tensor(pos).cuda().requires_grad_(True))
+        shs_tensor = torch.tensor(shs).cuda()
+        self._features_dc = nn.Parameter(shs_tensor[:,:,:1].requires_grad_(True))
+        self._features_rest = nn.Parameter(shs_tensor[:,:,1:16].requires_grad_(True))
+        self._opacity = nn.Parameter(torch.tensor(alphas).cuda().requires_grad_(True))
+        self._scaling = nn.Parameter(torch.tensor(scales).cuda().requires_grad_(True))
+        self._rotation = nn.Parameter(torch.tensor(rot).cuda().requires_grad_(True))
     
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
-        for i in range(self._features_dc.shape[1]):
+        for i in range(self._features_dc.shape[1] * self._features_dc.shape[2]):
             l.append(f'f_dc_{i}')
-        for i in range(self._features_rest.shape[1]):
+        for i in range(self._features_rest.shape[1] * self._features_rest.shape[2]):
             l.append(f'f_rest_{i}')
         l.append('opacity')
         for i in range(self._scaling.shape[1]):
@@ -42,13 +44,13 @@ class GaussianModel:
     def save_ply(self, path):
         mkdir_p(os.path.dirname(path))
 
-        xyz = self._xyz.numpy()
+        xyz = self._xyz.detach().cpu().numpy()
         normals = np.zeros_like(xyz)
-        f_dc = self._features_dc.numpy()
-        f_rest = self._features_rest.numpy()
-        opacities = self._opacity.numpy()
-        scale = self._scaling.numpy()
-        rotation = self._rotation.numpy()
+        f_dc = self._features_dc.detach().cpu().numpy().reshape(self._features_dc.shape[0], -1)
+        f_rest = self._features_rest.detach().cpu().numpy().reshape(self._features_rest.shape[0], -1)
+        opacities = self._opacity.detach().cpu().numpy().reshape(-1, 1)
+        scale = self._scaling.detach().cpu().numpy()
+        rotation = self._rotation.detach().cpu().numpy()
 
         attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
 
@@ -60,17 +62,17 @@ class GaussianModel:
 
 def convert_hier_to_ply(base_path):
     model = GaussianModel()
-    hier_path = os.path.join(base_path, "output", "merged.hier")
-    if os.path.exists(hier_path):
-        model.load_hier(hier_path)
+    hier_path = os.path.join(base_path, "output")
+    if os.path.exists(os.path.join(hier_path, "merged.hier")):
+        model.load_hier(os.path.join(hier_path, "merged.hier"))
         ply_path = os.path.join(base_path, "output", "output.ply")
         model.save_ply(ply_path)
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Convert merged hier file to PLY file.")
-    parser.add_argument("base_path", type=str, help="Base path containing the merged hier file.")
+    parser = argparse.ArgumentParser(description="Convert hier files to PLY files.")
+    parser.add_argument("base_path", type=str, help="Base path containing folders with hier files.")
     args = parser.parse_args()
 
     convert_hier_to_ply(args.base_path)
