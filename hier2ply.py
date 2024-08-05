@@ -44,7 +44,7 @@ class GaussianModel:
             l.append('rot_{}'.format(i))
         return l
 
-    def save_ply(self, path):
+    def save_ply(self, path, threshold=0.01):
         mkdir_p(os.path.dirname(path))
 
         render_indices = torch.zeros(self._xyz.size(0)).int().cuda()
