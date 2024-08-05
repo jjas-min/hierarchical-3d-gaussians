@@ -21,12 +21,12 @@ class GaussianModel(nn.Module):
     
     def load_hier(self, path):
         xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
-        self._xyz = nn.Parameter(xyz.cuda().requires_grad_(True))
-        self._features_dc = nn.Parameter(shs_all.cuda()[:,:1,:].requires_grad_(True))
-        self._features_rest = nn.Parameter(shs_all.cuda()[:,1:16,:].requires_grad_(True))
-        self._opacity = nn.Parameter(alpha.cuda().requires_grad_(True))
-        self._scaling = nn.Parameter(scales.cuda().requires_grad_(True))
-        self._rotation = nn.Parameter(rots.cuda().requires_grad_(True))
+        self._xyz = nn.Parameter(xyz.cuda().requires_grad_(False))
+        self._features_dc = nn.Parameter(shs_all.cuda()[:,:1,:].requires_grad_(False))
+        self._features_rest = nn.Parameter(shs_all.cuda()[:,1:16,:].requires_grad_(False))
+        self._opacity = nn.Parameter(alpha.cuda().requires_grad_(False))
+        self._scaling = nn.Parameter(scales.cuda().requires_grad_(False))
+        self._rotation = nn.Parameter(rots.cuda().requires_grad_(False))
         self.nodes = nodes
         self.boxes = boxes
     
