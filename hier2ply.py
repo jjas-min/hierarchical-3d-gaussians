@@ -30,14 +30,14 @@ class GaussianModel:
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
         for i in range(self._features_dc.shape[1] * self._features_dc.shape[2]):
-            l.append('f_dc_{}'.format(i))
+            l.append(f'f_dc_{i}')
         for i in range(self._features_rest.shape[1] * self._features_rest.shape[2]):
-            l.append('f_rest_{}'.format(i))
+            l.append(f'f_rest_{i}')
         l.append('opacity')
         for i in range(self._scaling.shape[1]):
-            l.append('scale_{}'.format(i))
+            l.append(f'scale_{i}')
         for i in range(self._rotation.shape[1]):
-            l.append('rot_{}'.format(i))
+            l.append(f'rot_{i}')
         return l
 
     def save_ply(self, path):
@@ -45,16 +45,13 @@ class GaussianModel:
 
         xyz = self._xyz.detach().cpu().numpy()
         normals = np.zeros_like(xyz)
-        f_dc = self._features_dc.detach().cpu().numpy()
-        f_rest = self._features_rest.detach().cpu().numpy()
+        f_dc = self._features_dc.detach().cpu().numpy().reshape(self._features_dc.shape[0], -1)
+        f_rest = self._features_rest.detach().cpu().numpy().reshape(self._features_rest.shape[0], -1)
         opacities = self._opacity.detach().cpu().numpy().reshape(-1, 1)
         scale = self._scaling.detach().cpu().numpy()
         rotation = self._rotation.detach().cpu().numpy()
 
-        # 모든 데이터를 변환하여 포함시킴
-        f_dc_reshaped = f_dc.reshape(f_dc.shape[0], -1)
-        f_rest_reshaped = f_rest.reshape(f_rest.shape[0], -1)
-        attributes = np.concatenate((xyz, normals, f_dc_reshaped, f_rest_reshaped, opacities, scale, rotation), axis=1)
+        attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
 
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
@@ -63,16 +60,13 @@ class GaussianModel:
         PlyData([el]).write(path)
 
 def convert_hier_to_ply(base_path):
-    # GaussianModel 인스턴스 생성
     model = GaussianModel()
-    # Output 폴더 내의 hier 파일을 로드하여 PLY 파일로 변환
     hier_path = os.path.join(base_path, "output")
     if os.path.exists(os.path.join(hier_path, "merged.hier")):
         model.load_hier(os.path.join(hier_path, "merged.hier"))
         ply_path = os.path.join(base_path, "output", "output.ply")
         model.save_ply(ply_path)
 
-# 예시 사용법
 if __name__ == "__main__":
     import argparse
 
