@@ -78,16 +78,22 @@ class GaussianModel(nn.Module):
 
             # Use expand_to_size and get_interpolation_weights as in the render_set function
             camera_center = torch.zeros((3)).cuda()
-            to_render = expand_to_size(
-                self.nodes,
-                self.boxes,
-                threshold,
-                camera_center,
-                camera_center,  # Assuming camera forward is also at the origin
-                render_indices,
-                parent_indices,
-                nodes_for_render_indices
-            )
+
+            # Try-catch block to catch specific errors in expand_to_size
+            try:
+                to_render = expand_to_size(
+                    self.nodes,
+                    self.boxes,
+                    threshold,
+                    camera_center,
+                    camera_center,  # Assuming camera forward is also at the origin
+                    render_indices,
+                    parent_indices,
+                    nodes_for_render_indices
+                )
+            except Exception as e:
+                print(f"Error in expand_to_size: {e}")
+                raise
 
             # Debugging: Print shapes of all arrays after expand_to_size
             print("to_render:", to_render)
