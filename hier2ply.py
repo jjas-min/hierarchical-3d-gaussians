@@ -24,13 +24,13 @@ class GaussianModel:
     
     def load_hier(self, path):
         pos, shs, alphas, scales, rot, nodes, boxes = load_hierarchy(path)
-        self._xyz = nn.Parameter(torch.tensor(pos).cuda().requires_grad_(True))
-        shs_tensor = torch.tensor(shs).cuda()
+        self._xyz = nn.Parameter(torch.tensor(pos).clone().detach().cuda().requires_grad_(True))
+        shs_tensor = torch.tensor(shs).clone().detach().cuda()
         self._features_dc = nn.Parameter(shs_tensor[:,:,:1].requires_grad_(True))
         self._features_rest = nn.Parameter(shs_tensor[:,:,1:16].requires_grad_(True))
-        self._opacity = nn.Parameter(torch.tensor(alphas).cuda().requires_grad_(True))
-        self._scaling = nn.Parameter(torch.tensor(scales).cuda().requires_grad_(True))
-        self._rotation = nn.Parameter(torch.tensor(rot).cuda().requires_grad_(True))
+        self._opacity = nn.Parameter(torch.tensor(alphas).clone().detach().cuda().requires_grad_(True))
+        self._scaling = nn.Parameter(torch.tensor(scales).clone().detach().cuda().requires_grad_(True))
+        self._rotation = nn.Parameter(torch.tensor(rot).clone().detach().cuda().requires_grad_(True))
         self.nodes = nodes
         self.boxes = boxes
     
