@@ -18,7 +18,7 @@ class GaussianModel:
         self._scaling = None
         self._rotation = None
     
-    def load_heir(self, path):
+    def load_hier(self, path):
         xyz, shs_all, alpha, scales, rots, nodes, boxes = load_hierarchy(path)
         self._xyz = nn.Parameter(xyz.cuda().requires_grad_(True))
         self._features_dc = nn.Parameter(shs_all.cuda()[:,:1,:].requires_grad_(True))
@@ -50,11 +50,12 @@ class GaussianModel:
         opacities = self._opacity.detach().cpu().numpy()
         scale = self._scaling.detach().cpu().numpy()
         rotation = self._rotation.detach().cpu().numpy()
-
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
+        # 모든 데이터를 변환하여 포함시킴
+        attributes = np.concatenate((xyz, normals, f_dc.reshape(f_dc.shape[0], -1), f_rest.reshape(f_rest.shape[0], -1), opacities, scale, rotation), axis=1)
 
+        
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
-        attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
@@ -63,19 +64,18 @@ def convert_hier_to_ply(base_path):
     # GaussianModel 인스턴스 생성
     model = GaussianModel()
     # Output 폴더 내의 hier 파일을 로드하여 PLY 파일로 변환
-    heir_path = os.path.join(base_path, "output")
-    if os.path.exists(os.path.join(heir_path, "merged.hier")):
-        model.load_heir(os.path.join(heir_path, "merged.hier"))
+    hier_path = os.path.join(base_path, "output")
+    if os.path.exists(os.path.join(hier_path, "merged.hier")):
+        model.load_hier(os.path.join(hier_path, "merged.hier"))
         ply_path = os.path.join(base_path, "output", "output.ply")
         model.save_ply(ply_path)
-
 
 # 예시 사용법
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Convert PT files to PLY files.")
-    parser.add_argument("base_path", type=str, help="Base path containing folders with PT files.")
+    parser = argparse.ArgumentParser(description="Convert hier files to PLY files.")
+    parser.add_argument("base_path", type=str, help="Base path containing folders with hier files.")
     args = parser.parse_args()
 
     convert_hier_to_ply(args.base_path)
