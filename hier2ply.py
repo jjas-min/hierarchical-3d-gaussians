@@ -89,6 +89,12 @@ class GaussianModel(nn.Module):
                 nodes_for_render_indices
             )
 
+            # Debugging: Print shapes of all arrays after expand_to_size
+            print("to_render:", to_render)
+            print("render_indices after expand_to_size:", render_indices[:to_render])
+            print("parent_indices after expand_to_size:", parent_indices[:to_render])
+            print("nodes_for_render_indices after expand_to_size:", nodes_for_render_indices[:to_render])
+
             indices = render_indices[:to_render].int().contiguous()
             node_indices = nodes_for_render_indices[:to_render].contiguous()
 
