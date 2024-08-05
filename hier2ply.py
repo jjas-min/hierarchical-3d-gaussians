@@ -67,8 +67,7 @@ class GaussianModel(nn.Module):
             # Determine the indices to render based on threshold
             to_render = 0
             for i in range(self.nodes.size(0)):
-                box_center = (self.boxes[i, 0] + self.boxes[i, 1]) / 2
-                box_size = (self.boxes[i, 1] - self.boxes[i, 0]) / 2
+                box_center = (self.boxes[i, 0, :3] + self.boxes[i, 1, :3]) / 2  # Only use the first 3 elements
                 dist_to_center = torch.norm(camera_center - box_center.cuda())
                 if dist_to_center < threshold:
                     render_indices[to_render] = i
