@@ -3,7 +3,9 @@ import torch
 from torch import nn
 import numpy as np
 from plyfile import PlyData, PlyElement
-from gaussian_hierarchy._C import load_hierarchy
+from gaussian_hierarchy._C import load_hierarchy, expand_to_size, get_interpolation_weights
+
+torch.autograd.set_detect_anomaly(True)
 
 def mkdir_p(path):
     if not os.path.exists(path):
