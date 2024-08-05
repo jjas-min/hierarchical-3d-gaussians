@@ -111,14 +111,11 @@ if __name__ == '__main__':
                 if args.skip_bundle_adjustment:
                     prepare_chunk_args.append("--skip_bundle_adjustment")
                 job = subprocess.Popen(
-                    prepare_chunk_args,
-                    stderr=open(f"{in_dir}/log.err", 'w'), 
-                    stdout=open(f"{in_dir}/log.out", 'w'),
+                    prepare_chunk_args
                 )
                 submitted_jobs.append(job)
                 n_processed += 1
                 print(f"Launched triangulation for [{n_processed} / {len(chunk_names)} chunks].")
-                print(f"Logs in {in_dir}/log.err (or .out)")
             except subprocess.CalledProcessError as e:
                 print(f"Error executing prepare_chunk.py: {e}")
                 sys.exit(1)
