@@ -69,6 +69,13 @@ class GaussianModel(nn.Module):
             print("nodes_for_render_indices:", nodes_for_render_indices.shape, nodes_for_render_indices.dtype)
             print("torch.zeros((3)).cuda():", torch.zeros((3)).cuda().shape, torch.zeros((3)).cuda().dtype)
 
+            # Print sample data
+            print("Sample nodes:", self.nodes[:5])
+            print("Sample boxes:", self.boxes[:5])
+            print("Sample render_indices:", render_indices[:5])
+            print("Sample parent_indices:", parent_indices[:5])
+            print("Sample nodes_for_render_indices:", nodes_for_render_indices[:5])
+
             # Use expand_to_size and get_interpolation_weights as in the render_set function
             to_render = expand_to_size(
                 self.nodes,
