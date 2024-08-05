@@ -30,8 +30,8 @@ class GaussianModel(nn.Module):
             self._opacity = nn.Parameter(alpha.cuda().requires_grad_(False))
             self._scaling = nn.Parameter(scales.cuda().requires_grad_(False))
             self._rotation = nn.Parameter(rots.cuda().requires_grad_(False))
-            self.nodes = nodes
-            self.boxes = boxes
+            self.nodes = nodes.cuda()
+            self.boxes = boxes.cuda()
         except Exception as e:
             print(f"Error loading hierarchy: {e}")
             raise
@@ -77,12 +77,13 @@ class GaussianModel(nn.Module):
             print("Sample nodes_for_render_indices:", nodes_for_render_indices[:5])
 
             # Use expand_to_size and get_interpolation_weights as in the render_set function
+            camera_center = torch.zeros((3)).cuda()
             to_render = expand_to_size(
                 self.nodes,
                 self.boxes,
                 threshold,
-                torch.zeros((3)).cuda(),  # Assuming the camera center is at the origin
-                torch.zeros((3)),
+                camera_center,
+                camera_center,  # Assuming camera forward is also at the origin
                 render_indices,
                 parent_indices,
                 nodes_for_render_indices
@@ -96,7 +97,7 @@ class GaussianModel(nn.Module):
                 threshold,
                 self.nodes,
                 self.boxes,
-                torch.zeros((3)).cpu(),
+                camera_center.cpu(),
                 torch.zeros((3)),
                 interpolation_weights,
                 num_siblings
@@ -155,4 +156,4 @@ if __name__ == "__main__":
     parser.add_argument("base_path", type=str, help="Base path containing folders with hier files.")
     args = parser.parse_args()
 
-    convert_hier_to_ply(args.base_path)
+    convert_hier_to_ply(args.base
