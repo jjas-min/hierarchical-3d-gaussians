@@ -15,7 +15,7 @@ class GaussianModel:
 
     def load_hier(self, path):
         # Custom loader function to read .hier file
-        pos, shs, alphas, scales, rot = self.custom_loader(path)
+        pos, shs, alphas, scales, rot, num_points = self.custom_loader(path)
         print("Positions loaded: ", pos.shape)
         print("SH coefficients loaded: ", shs.shape)
         print("Alphas loaded: ", alphas.shape)
@@ -23,8 +23,8 @@ class GaussianModel:
         print("Rotations loaded: ", rot.shape)
         self._xyz = torch.tensor(pos).float()
         shs_tensor = torch.tensor(shs).float()
-        self._features_dc = shs_tensor[:, :1].reshape(-1, shs_tensor.shape[2])
-        self._features_rest = shs_tensor[:, 1:16].reshape(-1, shs_tensor.shape[2])
+        self._features_dc = shs_tensor[:, :1].reshape(num_points, -1)
+        self._features_rest = shs_tensor[:, 1:16].reshape(num_points, -1)
         self._opacity = torch.tensor(alphas).float().reshape(-1, 1)
         self._scaling = torch.tensor(scales).float()
         self._rotation = torch.tensor(rot).float()
@@ -35,13 +35,14 @@ class GaussianModel:
             if P < 0:
                 raise ValueError("Invalid number of points in the .hier file")
 
-            pos = np.frombuffer(f.read(P * 12), dtype=np.float32).reshape(P, 3)
-            rot = np.frombuffer(f.read(P * 16), dtype=np.float32).reshape(P, 4)
-            scales = np.frombuffer(f.read(P * 12), dtype=np.float32).reshape(P, 3)
-            alphas = np.frombuffer(f.read(P * 4), dtype=np.float32)
-            shs = np.frombuffer(f.read(P * 192), dtype=np.float32).reshape(P, 48)
+            num_points = P
+            pos = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
+            rot = np.frombuffer(f.read(num_points * 16), dtype=np.float32).reshape(num_points, 4)
+            scales = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
+            alphas = np.frombuffer(f.read(num_points * 4), dtype=np.float32)
+            shs = np.frombuffer(f.read(num_points * 192), dtype=np.float32).reshape(num_points, 48)
 
-        return pos, shs, alphas, scales, rot
+        return pos, shs, alphas, scales, rot, num_points
 
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
