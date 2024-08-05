@@ -1,8 +1,11 @@
 import os
 import numpy as np
 from plyfile import PlyData, PlyElement
-import torch
-from torch import nn
+from hierarchy_loader import load_hierarchy  # Assuming the C++ code is wrapped for Python use
+
+def mkdir_p(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 class GaussianModel:
     def __init__(self):
@@ -12,41 +15,17 @@ class GaussianModel:
         self._opacity = None
         self._scaling = None
         self._rotation = None
-
+    
     def load_hier(self, path):
-        # Custom loader function to read .hier file
-        pos, shs, alphas, scales, rot, num_points = self.custom_loader(path)
-        print("Positions loaded: ", pos.shape)
-        print("SH coefficients loaded: ", shs.shape)
-        print("Alphas loaded: ", alphas.shape)
-        print("Scales loaded: ", scales.shape)
-        print("Rotations loaded: ", rot.shape)
+        pos, shs, alphas, scales, rot, nodes, boxes = load_hierarchy(path)
         self._xyz = torch.tensor(pos).float()
         shs_tensor = torch.tensor(shs).float()
-        self._features_dc = shs_tensor[:, :1].reshape(num_points, -1)
-        self._features_rest = shs_tensor[:, 1:16].reshape(num_points, -1)
+        self._features_dc = shs_tensor[:,:,:1].reshape(-1, shs_tensor.shape[2])
+        self._features_rest = shs_tensor[:,:,1:16].reshape(-1, shs_tensor.shape[2])
         self._opacity = torch.tensor(alphas).float().reshape(-1, 1)
         self._scaling = torch.tensor(scales).float()
         self._rotation = torch.tensor(rot).float()
-
-    def custom_loader(self, path):
-        with open(path, 'rb') as f:
-            # Read the number of points
-            P = int.from_bytes(f.read(4), 'little')
-            if P < 0:
-                P = -P
-            print(f"Number of points: {P}")
-            num_points = P
-            
-            # Reading the actual data
-            pos = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
-            rot = np.frombuffer(f.read(num_points * 16), dtype=np.float32).reshape(num_points, 4)
-            scales = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
-            alphas = np.frombuffer(f.read(num_points * 4), dtype=np.float32)
-            shs = np.frombuffer(f.read(num_points * 192), dtype=np.float32).reshape(num_points, 48)
-
-        return pos, shs, alphas, scales, rot, num_points
-
+    
     def construct_list_of_attributes(self):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
         for i in range(self._features_dc.shape[1]):
@@ -61,8 +40,7 @@ class GaussianModel:
         return l
 
     def save_ply(self, path):
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
+        mkdir_p(os.path.dirname(path))
 
         xyz = self._xyz.numpy()
         normals = np.zeros_like(xyz)
@@ -73,6 +51,7 @@ class GaussianModel:
         rotation = self._rotation.numpy()
 
         attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
+
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
         elements[:] = list(map(tuple, attributes))
