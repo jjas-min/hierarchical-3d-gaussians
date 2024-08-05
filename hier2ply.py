@@ -41,7 +41,13 @@ class GaussianModel:
             l.append(f'rot_{i}')
         return l
 
-    def save_ply(self, path):
+    def filter_large_splats(self, xyz, normals, f_dc, f_rest, opacities, scale, rotation, scale_threshold=0.1):
+        scale_magnitudes = np.linalg.norm(scale, axis=1)
+        mask = scale_magnitudes < scale_threshold
+
+        return xyz[mask], normals[mask], f_dc[mask], f_rest[mask], opacities[mask], scale[mask], rotation[mask]
+
+    def save_ply(self, path, scale_threshold=0.1):
         mkdir_p(os.path.dirname(path))
 
         xyz = self._xyz.detach().cpu().numpy()
@@ -52,6 +58,11 @@ class GaussianModel:
         scale = self._scaling.detach().cpu().numpy()
         rotation = self._rotation.detach().cpu().numpy()
 
+        # Filter large splats
+        xyz, normals, f_dc, f_rest, opacities, scale, rotation = self.filter_large_splats(
+            xyz, normals, f_dc, f_rest, opacities, scale, rotation, scale_threshold
+        )
+
         attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
 
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
@@ -60,19 +71,20 @@ class GaussianModel:
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
 
-def convert_hier_to_ply(base_path):
+def convert_hier_to_ply(base_path, scale_threshold=0.1):
     model = GaussianModel()
     hier_path = os.path.join(base_path, "output")
     if os.path.exists(os.path.join(hier_path, "merged.hier")):
         model.load_hier(os.path.join(hier_path, "merged.hier"))
         ply_path = os.path.join(base_path, "output", "output.ply")
-        model.save_ply(ply_path)
+        model.save_ply(ply_path, scale_threshold)
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Convert hier files to PLY files.")
     parser.add_argument("base_path", type=str, help="Base path containing folders with hier files.")
+    parser.add_argument("--scale_threshold", type=float, default=0.1, help="Scale threshold to filter large splats.")
     args = parser.parse_args()
 
-    convert_hier_to_ply(args.base_path)
+    convert_hier_to_ply(args.base_path, args.scale_threshold)
