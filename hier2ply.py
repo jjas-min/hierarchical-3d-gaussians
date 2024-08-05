@@ -31,11 +31,14 @@ class GaussianModel:
 
     def custom_loader(self, path):
         with open(path, 'rb') as f:
+            # Read the number of points
             P = int.from_bytes(f.read(4), 'little')
             if P < 0:
-                raise ValueError("Invalid number of points in the .hier file")
-
+                P = -P
+            print(f"Number of points: {P}")
             num_points = P
+            
+            # Reading the actual data
             pos = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
             rot = np.frombuffer(f.read(num_points * 16), dtype=np.float32).reshape(num_points, 4)
             scales = np.frombuffer(f.read(num_points * 12), dtype=np.float32).reshape(num_points, 3)
