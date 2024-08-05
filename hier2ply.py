@@ -156,4 +156,4 @@ if __name__ == "__main__":
     parser.add_argument("base_path", type=str, help="Base path containing folders with hier files.")
     args = parser.parse_args()
 
-    convert_hier_to_ply(args.base
+    convert_hier_to_ply(args.base_path)
